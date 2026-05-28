@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상식 퀴즈 게임</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, "Noto Sans KR", sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 16px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    /* ── 시작 화면 ── */
+    #screen-start { text-align: center; }
+
+    .start-title {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .start-subtitle {
+      color: #555;
+      margin-bottom: 24px;
+    }
+
+    .rules-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px 24px;
+      text-align: left;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .rules-box h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+
+    .rules-box ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rules-box li::before {
+      content: "- ";
+      color: #888;
+    }
+
+    .nickname-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .nickname-area input {
+      width: 100%;
+      max-width: 320px;
+      padding: 12px 16px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .nickname-area input:focus {
+      border-color: #4361ee;
+    }
+
+    .nickname-warn {
+      color: #d32f2f;
+      font-size: 0.85rem;
+      min-height: 1.2em;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 40px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: #4361ee;
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: #3a56d4; }
+
+    .btn-primary:disabled {
+      background: #aab;
+      cursor: not-allowed;
+    }
+
+    /* ── 문제 화면 ── */
+    #screen-quiz { display: none; }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .badge-한국사 { background: #e63946; }
+    .badge-과학 { background: #457b9d; }
+    .badge-지리 { background: #2a9d8f; }
+    .badge-일반상식 { background: #e9c46a; color: #333; }
+
+    .progress-text {
+      font-size: 0.9rem;
+      color: #666;
+      font-weight: 600;
+    }
+
+    .progress-bar-track {
+      width: 100%;
+      height: 8px;
+      background: #ddd;
+      border-radius: 4px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #4361ee;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .quiz-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+
+    .quiz-question {
+      font-size: 1.15rem;
+      font-weight: 700;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .quiz-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-btn {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      font-size: 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: #4361ee;
+      background: #f0f4ff;
+    }
+
+    .option-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #555;
+    }
+
+    .option-btn.correct {
+      border-color: #2e7d32;
+      background: #e8f5e9;
+    }
+
+    .option-btn.correct .option-num {
+      background: #2e7d32;
+      color: #fff;
+    }
+
+    .option-btn.correct::after {
+      content: "O 정답";
+      margin-left: auto;
+      font-weight: 700;
+      color: #2e7d32;
+      font-size: 0.85rem;
+    }
+
+    .option-btn.wrong {
+      border-color: #c62828;
+      background: #ffebee;
+    }
+
+    .option-btn.wrong .option-num {
+      background: #c62828;
+      color: #fff;
+    }
+
+    .option-btn.wrong::after {
+      content: "X 오답";
+      margin-left: auto;
+      font-weight: 700;
+      color: #c62828;
+      font-size: 0.85rem;
+    }
+
+    .explanation {
+      display: none;
+      margin-top: 16px;
+      padding: 14px 18px;
+      background: #f8f9fa;
+      border-left: 4px solid #4361ee;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .btn-next-area {
+      text-align: center;
+      margin-top: 20px;
+      display: none;
+    }
+
+    /* ── 결과 화면 ── */
+    #screen-result {
+      display: none;
+      text-align: center;
+    }
+
+    .result-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 32px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+    }
+
+    .result-nickname {
+      font-size: 1.1rem;
+      color: #555;
+      margin-bottom: 4px;
+    }
+
+    .result-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .result-score {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #4361ee;
+      margin: 8px 0;
+    }
+
+    .result-sub {
+      color: #777;
+      margin-bottom: 20px;
+    }
+
+    .result-detail {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .detail-row .badge { font-size: 0.8rem; }
+
+    .detail-score { font-weight: 700; }
+
+    /* ── 순위표 ── */
+    .ranking-section {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .ranking-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .ranking-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .ranking-table th {
+      padding: 8px 6px;
+      font-size: 0.8rem;
+      color: #888;
+      font-weight: 600;
+      text-align: left;
+      border-bottom: 2px solid #eee;
+    }
+
+    .ranking-table th:first-child { text-align: center; width: 40px; }
+    .ranking-table th:last-child { text-align: right; }
+
+    .ranking-table td {
+      padding: 10px 6px;
+      font-size: 0.95rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ranking-table td:first-child {
+      text-align: center;
+      font-weight: 800;
+      color: #aaa;
+    }
+
+    .ranking-table td:last-child {
+      text-align: right;
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    .ranking-table tr.rank-1 td:first-child { color: #ffd700; }
+    .ranking-table tr.rank-2 td:first-child { color: #c0c0c0; }
+    .ranking-table tr.rank-3 td:first-child { color: #cd7f32; }
+
+    .ranking-table tr.current-record {
+      background: #eef2ff;
+    }
+
+    .ranking-table tr.current-record td {
+      font-weight: 700;
+      color: #4361ee;
+    }
+
+    .ranking-table tr.current-record td:last-child {
+      color: #4361ee;
+    }
+
+    .ranking-current-tag {
+      display: inline-block;
+      background: #4361ee;
+      color: #fff;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
+    .ranking-empty {
+      text-align: center;
+      color: #aaa;
+      padding: 20px 0;
+    }
+
+    .score-cell {
+      font-weight: 700;
+    }
+
+    /* ── 반응형 ── */
+    @media (max-width: 480px) {
+      body { padding: 16px 10px; }
+      .start-title { font-size: 1.5rem; }
+      .quiz-card { padding: 20px 16px; }
+      .quiz-question { font-size: 1.05rem; }
+      .result-score { font-size: 2.2rem; }
+      .ranking-section { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- 시작 화면 -->
+  <div id="screen-start">
+    <h1 class="start-title">상식 퀴즈 게임</h1>
+    <p class="start-subtitle">한국사 / 과학 / 지리 / 일반상식</p>
+
+    <div class="rules-box">
+      <h2>게임 규칙</h2>
+      <ul>
+        <li>총 40문제 (카테고리별 10문제)</li>
+        <li>4개 보기 중 정답 1개를 선택하세요</li>
+        <li>정답당 10점, 만점은 400점</li>
+        <li>선택 후 변경은 불가합니다</li>
+        <li>해설을 확인한 후 다음 문제로 넘어갑니다</li>
+      </ul>
+    </div>
+
+    <div class="nickname-area">
+      <input type="text" id="input-nickname" placeholder="닉네임을 입력하세요" maxlength="12">
+      <p class="nickname-warn" id="nickname-warn"></p>
+      <button class="btn btn-primary" id="btn-start" disabled>게임 시작</button>
+    </div>
+  </div>
+
+  <!-- 문제 화면 -->
+  <div id="screen-quiz">
+    <div class="quiz-header">
+      <span class="badge" id="quiz-category"></span>
+      <span class="progress-text" id="quiz-progress"></span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-bar"></div>
+    </div>
+    <div class="quiz-card">
+      <p class="quiz-question" id="quiz-question"></p>
+      <div class="quiz-options" id="quiz-options"></div>
+      <div class="explanation" id="quiz-explanation"></div>
+    </div>
+    <div class="btn-next-area" id="btn-next-area">
+      <button class="btn btn-primary" id="btn-next">다음 문제</button>
+    </div>
+  </div>
+
+  <!-- 결과 화면 -->
+  <div id="screen-result">
+    <div class="result-card">
+      <p class="result-nickname" id="result-nickname"></p>
+      <h1 class="result-title">최종 결과</h1>
+      <p class="result-score" id="result-score"></p>
+      <p class="result-sub" id="result-sub"></p>
+      <div class="result-detail" id="result-detail"></div>
+    </div>
+
+    <div class="ranking-section">
+      <p class="ranking-title">TOP 10 순위표</p>
+      <div id="ranking-body"></div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-restart">다시 하기</button>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// 문제 데이터
+// ============================================================
+const QUESTIONS = [
+  // ── 한국사 (10문제) ──
+  {
+    id: 1,
+    category: "한국사",
+    question: "조선을 건국한 인물은 누구인가?",
+    options: ["이성계", "정도전", "이방원", "최영"],
+    answer: 0,
+    explanation: "이성계는 1392년 조선을 건국하고 태조로 즉위했다."
+  },
+  {
+    id: 2,
+    category: "한국사",
+    question: "훈민정음을 창제한 왕은?",
+    options: ["세종", "성종", "태종", "세조"],
+    answer: 0,
+    explanation: "세종대왕은 1443년 훈민정음을 창제하고 1446년 반포했다."
+  },
+  {
+    id: 3,
+    category: "한국사",
+    question: "임진왜란이 일어난 해는?",
+    options: ["1592년", "1636년", "1894년", "1510년"],
+    answer: 0,
+    explanation: "임진왜란은 1592년 일본의 침략으로 시작되었다."
+  },
+  {
+    id: 4,
+    category: "한국사",
+    question: "을사조약(을사늑약)이 체결된 해는?",
+    options: ["1895년", "1905년", "1910년", "1897년"],
+    answer: 1,
+    explanation: "1905년 을사조약으로 대한제국은 외교권을 빼앗겼다."
+  },
+  {
+    id: 5,
+    category: "한국사",
+    question: "3·1 운동이 일어난 해는?",
+    options: ["1910년", "1945년", "1919년", "1920년"],
+    answer: 2,
+    explanation: "1919년 3월 1일 전국적으로 독립만세운동이 일어났다."
+  },
+  {
+    id: 6,
+    category: "한국사",
+    question: "고려를 건국한 인물은?",
+    options: ["궁예", "견훤", "왕건", "김춘추"],
+    answer: 2,
+    explanation: "왕건은 918년 고려를 건국하고 936년 후삼국을 통일했다."
+  },
+  {
+    id: 7,
+    category: "한국사",
+    question: "조선시대 신분 제도에서 가장 높은 신분은?",
+    options: ["중인", "양반", "상민", "천민"],
+    answer: 1,
+    explanation: "조선의 신분 제도는 양반-중인-상민-천민의 네 계층으로 나뉘었다."
+  },
+  {
+    id: 8,
+    category: "한국사",
+    question: "병인양요의 원인이 된 사건은?",
+    options: ["천주교 박해", "통상 요구 거부", "제너럴셔먼호 사건", "운요호 사건"],
+    answer: 0,
+    explanation: "1866년 프랑스 선교사 처형(병인박해)을 구실로 프랑스가 침입했다."
+  },
+  {
+    id: 9,
+    category: "한국사",
+    question: "대한민국 임시정부가 수립된 도시는?",
+    options: ["도쿄", "베이징", "상하이", "블라디보스토크"],
+    answer: 2,
+    explanation: "1919년 중국 상하이에서 대한민국 임시정부가 수립되었다."
+  },
+  {
+    id: 10,
+    category: "한국사",
+    question: "6·25 전쟁이 발발한 해는?",
+    options: ["1948년", "1950년", "1953년", "1945년"],
+    answer: 1,
+    explanation: "1950년 6월 25일 북한의 남침으로 한국전쟁이 시작되었다."
+  },
+
+  // ── 과학 (10문제) ──
+  {
+    id: 11,
+    category: "과학",
+    question: "물의 화학식은?",
+    options: ["CO2", "H2O", "NaCl", "O2"],
+    answer: 1,
+    explanation: "물은 수소 2개와 산소 1개로 이루어진 H2O이다."
+  },
+  {
+    id: 12,
+    category: "과학",
+    question: "빛의 3원색이 아닌 것은?",
+    options: ["빨강", "초록", "파랑", "노랑"],
+    answer: 3,
+    explanation: "빛의 3원색은 빨강(R), 초록(G), 파랑(B)이다. 노랑은 색료의 3원색이다."
+  },
+  {
+    id: 13,
+    category: "과학",
+    question: "인체에서 가장 큰 장기는?",
+    options: ["심장", "폐", "간", "피부"],
+    answer: 3,
+    explanation: "피부는 면적과 무게 기준으로 인체에서 가장 큰 장기이다."
+  },
+  {
+    id: 14,
+    category: "과학",
+    question: "지구에서 달까지의 평균 거리는 약 얼마인가?",
+    options: ["38만 km", "150만 km", "1만 km", "3만 km"],
+    answer: 0,
+    explanation: "지구에서 달까지의 평균 거리는 약 38만 4,400km이다."
+  },
+  {
+    id: 15,
+    category: "과학",
+    question: "DNA의 이중나선 구조를 발견한 과학자는?",
+    options: ["다윈", "멘델", "왓슨과 크릭", "파스퇴르"],
+    answer: 2,
+    explanation: "1953년 왓슨과 크릭이 DNA의 이중나선 구조를 밝혀냈다."
+  },
+  {
+    id: 16,
+    category: "과학",
+    question: "절대온도 0K(켈빈)는 섭씨 몇 도인가?",
+    options: ["-100°C", "-273°C", "0°C", "-373°C"],
+    answer: 1,
+    explanation: "절대영도는 -273.15°C로, 이론상 도달 가능한 가장 낮은 온도이다."
+  },
+  {
+    id: 17,
+    category: "과학",
+    question: "광합성에서 식물이 흡수하는 기체는?",
+    options: ["산소", "질소", "이산화탄소", "수소"],
+    answer: 2,
+    explanation: "식물은 광합성 과정에서 이산화탄소를 흡수하고 산소를 방출한다."
+  },
+  {
+    id: 18,
+    category: "과학",
+    question: "원소 주기율표에서 원자번호 1번인 원소는?",
+    options: ["헬륨", "산소", "탄소", "수소"],
+    answer: 3,
+    explanation: "수소(H)는 원자번호 1번으로 가장 가벼운 원소이다."
+  },
+  {
+    id: 19,
+    category: "과학",
+    question: "소리는 어떤 매질에서 가장 빠르게 전달되는가?",
+    options: ["공기", "물", "고체(철)", "진공"],
+    answer: 2,
+    explanation: "소리는 밀도가 높은 고체에서 가장 빠르게 전달되며, 진공에서는 전달되지 않는다."
+  },
+  {
+    id: 20,
+    category: "과학",
+    question: "태양계에서 가장 큰 행성은?",
+    options: ["토성", "목성", "해왕성", "천왕성"],
+    answer: 1,
+    explanation: "목성은 태양계에서 가장 큰 행성으로, 지구의 약 11배 지름을 가진다."
+  },
+
+  // ── 지리 (10문제) ──
+  {
+    id: 21,
+    category: "지리",
+    question: "세계에서 가장 긴 강은?",
+    options: ["아마존강", "나일강", "양쯔강", "미시시피강"],
+    answer: 1,
+    explanation: "나일강은 약 6,650km로 세계에서 가장 긴 강이다."
+  },
+  {
+    id: 22,
+    category: "지리",
+    question: "대한민국에서 가장 높은 산은?",
+    options: ["지리산", "설악산", "한라산", "북한산"],
+    answer: 2,
+    explanation: "한라산은 해발 1,947m로 대한민국에서 가장 높은 산이다."
+  },
+  {
+    id: 23,
+    category: "지리",
+    question: "세계에서 가장 넓은 나라는?",
+    options: ["캐나다", "중국", "미국", "러시아"],
+    answer: 3,
+    explanation: "러시아는 약 1,710만 km²로 세계에서 가장 넓은 나라이다."
+  },
+  {
+    id: 24,
+    category: "지리",
+    question: "적도가 지나지 않는 대륙은?",
+    options: ["아프리카", "남아메리카", "유럽", "아시아"],
+    answer: 2,
+    explanation: "유럽은 적도보다 북쪽에 위치하여 적도가 지나지 않는다."
+  },
+  {
+    id: 25,
+    category: "지리",
+    question: "세계에서 가장 큰 사막은?",
+    options: ["사하라 사막", "고비 사막", "남극 사막", "아라비아 사막"],
+    answer: 2,
+    explanation: "남극 사막은 약 1,400만 km²로 세계에서 가장 큰 사막이다. 사하라는 열대 사막 중 가장 크다."
+  },
+  {
+    id: 26,
+    category: "지리",
+    question: "독도는 행정구역상 어디에 속하는가?",
+    options: ["경상북도 울릉군", "강원도 동해시", "경상남도 통영시", "부산광역시"],
+    answer: 0,
+    explanation: "독도는 경상북도 울릉군 울릉읍 독도리에 속한다."
+  },
+  {
+    id: 27,
+    category: "지리",
+    question: "세계에서 가장 높은 산은?",
+    options: ["K2", "에베레스트", "킬리만자로", "몽블랑"],
+    answer: 1,
+    explanation: "에베레스트산은 해발 8,849m로 세계에서 가장 높은 산이다."
+  },
+  {
+    id: 28,
+    category: "지리",
+    question: "대한민국의 최남단 유인도는?",
+    options: ["울릉도", "제주도", "마라도", "백령도"],
+    answer: 2,
+    explanation: "마라도는 제주도 남쪽에 위치한 대한민국 최남단 유인도이다."
+  },
+  {
+    id: 29,
+    category: "지리",
+    question: "아프리카 대륙에서 인구가 가장 많은 나라는?",
+    options: ["이집트", "남아프리카공화국", "에티오피아", "나이지리아"],
+    answer: 3,
+    explanation: "나이지리아는 약 2억 명 이상의 인구로 아프리카에서 가장 인구가 많다."
+  },
+  {
+    id: 30,
+    category: "지리",
+    question: "태평양과 대서양을 연결하는 운하는?",
+    options: ["수에즈 운하", "파나마 운하", "코린토스 운하", "킬 운하"],
+    answer: 1,
+    explanation: "파나마 운하는 중앙아메리카에 위치하여 태평양과 대서양을 연결한다."
+  },
+
+  // ── 일반상식 (10문제) ──
+  {
+    id: 31,
+    category: "일반상식",
+    question: "올림픽은 몇 년마다 개최되는가?",
+    options: ["2년", "3년", "4년", "5년"],
+    answer: 2,
+    explanation: "올림픽은 하계·동계 각각 4년마다 개최되며, 2년 간격으로 번갈아 열린다."
+  },
+  {
+    id: 32,
+    category: "일반상식",
+    question: "유엔(UN) 본부가 위치한 도시는?",
+    options: ["제네바", "뉴욕", "파리", "런던"],
+    answer: 1,
+    explanation: "유엔 본부는 미국 뉴욕 맨해튼에 위치해 있다."
+  },
+  {
+    id: 33,
+    category: "일반상식",
+    question: "세계에서 가장 많이 사용되는 언어(모국어 기준)는?",
+    options: ["영어", "스페인어", "중국어(만다린)", "힌디어"],
+    answer: 2,
+    explanation: "모국어 화자 수 기준으로 중국어(만다린)가 약 9억 명 이상으로 가장 많다."
+  },
+  {
+    id: 34,
+    category: "일반상식",
+    question: "노벨상에 포함되지 않는 분야는?",
+    options: ["물리학", "수학", "화학", "문학"],
+    answer: 1,
+    explanation: "노벨상은 물리학·화학·생리의학·문학·평화·경제학 6개 분야이며, 수학은 없다."
+  },
+  {
+    id: 35,
+    category: "일반상식",
+    question: "대한민국 국기(태극기)에 있는 4괘가 아닌 것은?",
+    options: ["건(하늘)", "곤(땅)", "감(물)", "손(바람)"],
+    answer: 3,
+    explanation: "태극기의 4괘는 건(하늘)·곤(땅)·감(물)·이(불)이다. 손(바람)은 포함되지 않는다."
+  },
+  {
+    id: 36,
+    category: "일반상식",
+    question: "비타민C가 가장 풍부한 과일은?",
+    options: ["사과", "바나나", "키위", "포도"],
+    answer: 2,
+    explanation: "키위는 100g당 약 90mg의 비타민C를 함유하여 대표적인 비타민C 과일이다."
+  },
+  {
+    id: 37,
+    category: "일반상식",
+    question: "세계보건기구(WHO)의 본부가 있는 도시는?",
+    options: ["뉴욕", "제네바", "파리", "비엔나"],
+    answer: 1,
+    explanation: "WHO 본부는 스위스 제네바에 위치해 있다."
+  },
+  {
+    id: 38,
+    category: "일반상식",
+    question: "대한민국의 현행 헌법은 몇 차 개헌 헌법인가?",
+    options: ["7차", "8차", "9차", "10차"],
+    answer: 2,
+    explanation: "현행 헌법은 1987년 6월 항쟁 이후 개정된 제9차 개헌 헌법이다."
+  },
+  {
+    id: 39,
+    category: "일반상식",
+    question: "이모티콘 ':)'은 어떤 감정을 나타내는가?",
+    options: ["슬픔", "놀람", "웃음", "화남"],
+    answer: 2,
+    explanation: ":)는 웃는 얼굴을 옆으로 표현한 이모티콘이다."
+  },
+  {
+    id: 40,
+    category: "일반상식",
+    question: "1바이트(byte)는 몇 비트(bit)인가?",
+    options: ["4비트", "8비트", "16비트", "32비트"],
+    answer: 1,
+    explanation: "1바이트는 8비트로 구성되며, 256가지 값을 표현할 수 있다."
+  }
+];
+
+// ============================================================
+// 게임 상태 객체
+// ============================================================
+const state = {
+  nickname: "",
+  currentIndex: 0,
+  locked: false,
+  score: 0,
+  categoryCorrect: {
+    "한국사": 0,
+    "과학": 0,
+    "지리": 0,
+    "일반상식": 0
+  },
+  shuffled: [],
+  currentRecordDate: null
+};
+
+// ============================================================
+// 유틸
+// ============================================================
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ============================================================
+// 순위 기록 (localStorage)
+// ============================================================
+const RANKING_KEY = "quizRankings";
+
+function loadRankings() {
+  try {
+    return JSON.parse(localStorage.getItem(RANKING_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRanking(record) {
+  const rankings = loadRankings();
+  rankings.push(record);
+  rankings.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return new Date(b.date) - new Date(a.date);
+  });
+  const top10 = rankings.slice(0, 10);
+  localStorage.setItem(RANKING_KEY, JSON.stringify(top10));
+  return top10;
+}
+
+function renderRanking(rankings, currentDate) {
+  const $body = document.getElementById("ranking-body");
+
+  if (rankings.length === 0) {
+    $body.innerHTML = '<p class="ranking-empty">아직 기록이 없습니다.</p>';
+    return;
+  }
+
+  let html = '<table class="ranking-table">';
+  html += '<thead><tr><th>#</th><th>닉네임</th><th>점수</th><th>날짜</th></tr></thead>';
+  html += '<tbody>';
+
+  rankings.forEach((r, i) => {
+    const isCurrent = r.date === currentDate;
+    const rankClass = (i < 3 ? " rank-" + (i + 1) : "") + (isCurrent ? " current-record" : "");
+    const tag = isCurrent ? '<span class="ranking-current-tag">NOW</span>' : "";
+    const dateStr = r.date.slice(0, 10);
+
+    html += '<tr class="' + rankClass.trim() + '">';
+    html += "<td>" + (i + 1) + "</td>";
+    html += "<td>" + escapeHtml(r.name) + tag + "</td>";
+    html += '<td class="score-cell">' + r.score + "점</td>";
+    html += "<td>" + dateStr + "</td>";
+    html += "</tr>";
+  });
+
+  html += "</tbody></table>";
+  $body.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ============================================================
+// 화면 전환
+// ============================================================
+const screens = {
+  start: document.getElementById("screen-start"),
+  quiz: document.getElementById("screen-quiz"),
+  result: document.getElementById("screen-result")
+};
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.style.display = "none");
+  screens[name].style.display = "block";
+  window.scrollTo(0, 0);
+}
+
+// ============================================================
+// DOM 참조
+// ============================================================
+const $nickname = document.getElementById("input-nickname");
+const $nicknameWarn = document.getElementById("nickname-warn");
+const $btnStart = document.getElementById("btn-start");
+const $category = document.getElementById("quiz-category");
+const $progress = document.getElementById("quiz-progress");
+const $progressBar = document.getElementById("progress-bar");
+const $question = document.getElementById("quiz-question");
+const $options = document.getElementById("quiz-options");
+const $explanation = document.getElementById("quiz-explanation");
+const $btnNextArea = document.getElementById("btn-next-area");
+const $btnNext = document.getElementById("btn-next");
+const $btnRestart = document.getElementById("btn-restart");
+
+// ============================================================
+// 닉네임 입력
+// ============================================================
+$nickname.addEventListener("input", () => {
+  const val = $nickname.value.trim();
+  if (val.length > 0) {
+    $btnStart.disabled = false;
+    $nicknameWarn.textContent = "";
+  } else {
+    $btnStart.disabled = true;
+  }
+});
+
+$nickname.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && $nickname.value.trim()) {
+    $btnStart.click();
+  }
+});
+
+// ============================================================
+// 게임 시작
+// ============================================================
+$btnStart.addEventListener("click", () => {
+  const val = $nickname.value.trim();
+  if (!val) {
+    $nicknameWarn.textContent = "닉네임을 입력해 주세요.";
+    return;
+  }
+  state.nickname = val;
+  state.currentIndex = 0;
+  state.locked = false;
+  state.score = 0;
+  state.currentRecordDate = null;
+  Object.keys(state.categoryCorrect).forEach(k => state.categoryCorrect[k] = 0);
+  state.shuffled = shuffle(QUESTIONS);
+  showScreen("quiz");
+  renderQuestion();
+});
+
+// ============================================================
+// 문제 렌더링
+// ============================================================
+function renderQuestion() {
+  const q = state.shuffled[state.currentIndex];
+  const total = state.shuffled.length;
+  const num = state.currentIndex + 1;
+
+  $category.textContent = q.category;
+  $category.className = "badge badge-" + q.category;
+  $progress.textContent = num + " / " + total;
+  $progressBar.style.width = ((num / total) * 100) + "%";
+  $question.textContent = "Q" + num + ". " + q.question;
+
+  $options.innerHTML = "";
+  const labels = ["A", "B", "C", "D"];
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.className = "option-btn";
+    btn.innerHTML = '<span class="option-num">' + labels[i] + '</span><span>' + escapeHtml(opt) + '</span>';
+    btn.addEventListener("click", () => selectAnswer(i, btn));
+    $options.appendChild(btn);
+  });
+
+  $explanation.style.display = "none";
+  $explanation.textContent = "";
+  $btnNextArea.style.display = "none";
+  state.locked = false;
+}
+
+// ============================================================
+// 답 선택
+// ============================================================
+function selectAnswer(index, btn) {
+  if (state.locked) return;
+  state.locked = true;
+
+  const q = state.shuffled[state.currentIndex];
+  const buttons = $options.querySelectorAll(".option-btn");
+  const isCorrect = index === q.answer;
+
+  buttons.forEach(b => b.disabled = true);
+
+  if (isCorrect) {
+    btn.classList.add("correct");
+    state.score += 10;
+    state.categoryCorrect[q.category]++;
+  } else {
+    btn.classList.add("wrong");
+    buttons[q.answer].classList.add("correct");
+  }
+
+  $explanation.textContent = q.explanation;
+  $explanation.style.display = "block";
+  $btnNextArea.style.display = "block";
+
+  if (state.currentIndex === state.shuffled.length - 1) {
+    $btnNext.textContent = "결과 보기";
+  } else {
+    $btnNext.textContent = "다음 문제";
+  }
+}
+
+// ============================================================
+// 다음 문제 / 결과
+// ============================================================
+$btnNext.addEventListener("click", () => {
+  state.currentIndex++;
+  if (state.currentIndex >= state.shuffled.length) {
+    showResult();
+  } else {
+    renderQuestion();
+  }
+});
+
+// ============================================================
+// 결과 화면
+// ============================================================
+function showResult() {
+  showScreen("result");
+
+  const correct = state.score / 10;
+
+  document.getElementById("result-nickname").textContent = state.nickname + "님의 성적표";
+  document.getElementById("result-score").textContent = state.score + " / 400";
+  document.getElementById("result-sub").textContent = "40문제 중 " + correct + "문제 정답";
+
+  const $detail = document.getElementById("result-detail");
+  $detail.innerHTML = "";
+  const categories = ["한국사", "과학", "지리", "일반상식"];
+  categories.forEach(cat => {
+    const cnt = state.categoryCorrect[cat];
+    const row = document.createElement("div");
+    row.className = "detail-row";
+    row.innerHTML =
+      '<span class="badge badge-' + cat + '">' + cat + '</span>' +
+      '<span class="detail-score">' + cnt + ' / 10</span>';
+    $detail.appendChild(row);
+  });
+
+  const now = new Date().toISOString();
+  state.currentRecordDate = now;
+  const record = {
+    name: state.nickname,
+    score: state.score,
+    correct: correct,
+    date: now
+  };
+  const rankings = saveRanking(record);
+  renderRanking(rankings, now);
+}
+
+// ============================================================
+// 다시 하기
+// ============================================================
+$btnRestart.addEventListener("click", () => {
+  $nickname.value = "";
+  $btnStart.disabled = true;
+  showScreen("start");
+});
+</script>
+
+</body>
+</html>
